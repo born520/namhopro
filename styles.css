@@ -1,3 +1,6 @@
+/* styles.css */
+
+/* 기존 스타일 유지 */
 table {
   border-collapse: collapse;
   width: 100%;
@@ -29,4 +32,9 @@ th, td {
   height: 100%;
   object-fit: contain; /* 이미지가 셀을 넘지 않고 비율을 유지하도록 */
   transform: translate(-50%, -50%);
+}
+
+/* 취소선 스타일 */
+.strikethrough {
+  text-decoration: line-through;
 }
