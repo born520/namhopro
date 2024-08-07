@@ -1,5 +1,3 @@
-// script.js
-
 document.addEventListener("DOMContentLoaded", function() {
   fetchData();
 });
@@ -24,11 +22,16 @@ function renderTable(data) {
     return;
   }
   const table = document.getElementById('data-table');
-  table.innerHTML = ''; // 초기화
+  table.innerHTML = '';
 
   const mergeMap = {};
   data.mergedCells.forEach(cell => {
-    mergeMap[`${cell.row}-${cell.column}`] = cell;
+    for (let i = 0; i < cell.numRows; i++) {
+      for (let j = 0; j < cell.numColumns; j++) {
+        const key = `${cell.row + i}-${cell.column + j}`;
+        mergeMap[key] = { masterRow: cell.row, masterColumn: cell.column };
+      }
+    }
   });
 
   data.tableData.forEach((row, rowIndex) => {
@@ -36,14 +39,14 @@ function renderTable(data) {
     row.forEach((cellData, colIndex) => {
       const cellKey = `${rowIndex + 1}-${colIndex + 1}`;
       const mergeInfo = mergeMap[cellKey];
-      if (!mergeInfo || (mergeInfo.row === rowIndex + 1 && mergeInfo.column === colIndex + 1)) {
+      if (!mergeInfo || (mergeInfo.masterRow === rowIndex + 1 && mergeInfo.masterColumn === colIndex + 1)) {
         const td = document.createElement('td');
         td.innerHTML = cellData;
         applyStyles(td, rowIndex, colIndex, data);
 
         if (mergeInfo) {
-          td.rowSpan = mergeInfo.numRows;
-          td.colSpan = mergeInfo.numColumns;
+          td.rowSpan = data.mergedCells.find(cell => cell.row === mergeInfo.masterRow && cell.column === mergeInfo.masterColumn).numRows;
+          td.colSpan = data.mergedCells.find(cell => cell.row === mergeInfo.masterRow && cell.column === mergeInfo.masterColumn).numColumns;
         }
         tr.appendChild(td);
       }
@@ -68,6 +71,5 @@ function applyStyles(td, rowIndex, colIndex, data) {
 }
 
 function applyBorderStyles(td) {
-  // 모든 셀의 테두리를 항상 표시
   td.style.border = '1px solid black';
 }
