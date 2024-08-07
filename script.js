@@ -26,13 +26,37 @@ function renderTable(data) {
   const table = document.getElementById('data-table');
   table.innerHTML = ''; // Clear any existing content
 
+  const mergeMap = {};
+  data.mergedCells.forEach(cell => {
+    mergeMap[`${cell.row}-${cell.column}`] = cell;
+  });
+
   data.tableData.forEach((row, rowIndex) => {
     const tr = document.createElement('tr');
     row.forEach((cellData, colIndex) => {
-      const td = document.createElement('td');
-      td.innerHTML = cellData; // Insert cell data as HTML
-      applyStyles(td, rowIndex, colIndex, data);
-      tr.appendChild(td);
+      const cellKey = `${rowIndex + 1}-${colIndex + 1}`;
+      if (mergeMap[cellKey]) {
+        const mergeInfo = mergeMap[cellKey];
+        const td = document.createElement('td');
+        td.innerHTML = cellData; // Insert cell data as HTML
+        td.rowSpan = mergeInfo.numRows;
+        td.colSpan = mergeInfo.numColumns;
+        applyStyles(td, rowIndex, colIndex, data);
+        tr.appendChild(td);
+        // Skip the cells that are part of the merge
+        for (let r = 0; r < mergeInfo.numRows; r++) {
+          for (let c = 0; c < mergeInfo.numColumns; c++) {
+            if (r !== 0 || c !== 0) {
+              row[colIndex + c] = null;
+            }
+          }
+        }
+      } else if (row[colIndex] !== null) {
+        const td = document.createElement('td');
+        td.innerHTML = cellData;
+        applyStyles(td, rowIndex, colIndex, data);
+        tr.appendChild(td);
+      }
     });
     table.appendChild(tr);
   });
@@ -50,7 +74,7 @@ function applyStyles(td, rowIndex, colIndex, data) {
     td.classList.add('strikethrough');
   }
 
-  applyBorderStyles(td); // Always apply border styles
+  applyBorderStyles(td);
 }
 
 function applyBorderStyles(td) {
