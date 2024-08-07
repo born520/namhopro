@@ -1,5 +1,3 @@
-// script.js
-
 document.addEventListener("DOMContentLoaded", function() {
   fetchData();
 });
@@ -24,37 +22,32 @@ function renderTable(data) {
     return;
   }
   const table = document.getElementById('data-table');
-  table.innerHTML = ''; // Clear any existing content
+  table.innerHTML = '';
 
   const mergeMap = {};
   data.mergedCells.forEach(cell => {
-    mergeMap[`${cell.row}-${cell.column}`] = cell;
+    for (let i = 0; i < cell.numRows; i++) {
+      for (let j = 0; j < cell.numColumns; j++) {
+        const key = `${cell.row + i}-${cell.column + j}`;
+        mergeMap[key] = { masterRow: cell.row, masterColumn: cell.column };
+      }
+    }
   });
 
   data.tableData.forEach((row, rowIndex) => {
     const tr = document.createElement('tr');
     row.forEach((cellData, colIndex) => {
       const cellKey = `${rowIndex + 1}-${colIndex + 1}`;
-      if (mergeMap[cellKey]) {
-        const mergeInfo = mergeMap[cellKey];
-        const td = document.createElement('td');
-        td.innerHTML = cellData; // Insert cell data as HTML
-        td.rowSpan = mergeInfo.numRows;
-        td.colSpan = mergeInfo.numColumns;
-        applyStyles(td, rowIndex, colIndex, data);
-        tr.appendChild(td);
-        // Skip the cells that are part of the merge
-        for (let r = 0; r < mergeInfo.numRows; r++) {
-          for (let c = 0; c < mergeInfo.numColumns; c++) {
-            if (r !== 0 || c !== 0) {
-              row[colIndex + c] = null;
-            }
-          }
-        }
-      } else if (row[colIndex] !== null) {
+      const mergeInfo = mergeMap[cellKey];
+      if (!mergeInfo || (mergeInfo.masterRow === rowIndex + 1 && mergeInfo.masterColumn === colIndex + 1)) {
         const td = document.createElement('td');
         td.innerHTML = cellData;
         applyStyles(td, rowIndex, colIndex, data);
+
+        if (mergeInfo) {
+          td.rowSpan = data.mergedCells.find(cell => cell.row === mergeInfo.masterRow && cell.column === mergeInfo.masterColumn).numRows;
+          td.colSpan = data.mergedCells.find(cell => cell.row === mergeInfo.masterRow && cell.column === mergeInfo.masterColumn).numColumns;
+        }
         tr.appendChild(td);
       }
     });
@@ -78,9 +71,5 @@ function applyStyles(td, rowIndex, colIndex, data) {
 }
 
 function applyBorderStyles(td) {
-  // 모든 셀의 테두리를 항상 표시
-  td.style.borderTop = '1px solid black';
-  td.style.borderRight = '1px solid black';
-  td.style.borderBottom = '1px solid black';
-  td.style.borderLeft = '1px solid black';
+  td.style.border = '1px solid black';
 }
