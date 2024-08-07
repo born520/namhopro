@@ -50,19 +50,13 @@ function applyStyles(td, rowIndex, colIndex, data) {
     td.classList.add('strikethrough');
   }
 
-  applyBorderStyles(td, data.borders[rowIndex][colIndex]);
+  applyBorderStyles(td); // Always apply border styles
 }
 
-function applyBorderStyles(td, borders) {
-  if (borders) {
-    td.style.borderTop = borders.top ? '1px solid black' : 'none';
-    td.style.borderRight = borders.right ? '1px solid black' : 'none';
-    td.style.borderBottom = borders.bottom ? '1px solid black' : 'none';
-    td.style.borderLeft = borders.left ? '1px solid black' : 'none';
-  } else {
-    td.style.borderTop = 'none';
-    td.style.borderRight = 'none';
-    td.style.borderBottom = 'none';
-    td.style.borderLeft = 'none';
-  }
+function applyBorderStyles(td) {
+  // 모든 셀의 테두리를 항상 표시
+  td.style.borderTop = '1px solid black';
+  td.style.borderRight = '1px solid black';
+  td.style.borderBottom = '1px solid black';
+  td.style.borderLeft = '1px solid black';
 }
