@@ -102,10 +102,11 @@ function renderTable(data) {
         td.style.fontWeight = fontWeights[rowIndex][colIndex];
       }
       if (fontStyles[rowIndex] && fontStyles[rowIndex][colIndex]) {
-        if (fontStyles[rowIndex][colIndex].includes('italic')) {
+        const styles = fontStyles[rowIndex][colIndex].split(' ');
+        if (styles.includes('italic')) {
           td.style.fontStyle = 'italic';
         }
-        if (fontStyles[rowIndex][colIndex].includes('strikethrough')) {
+        if (styles.includes('strikethrough')) {
           td.classList.add('strikethrough'); // 취소선 클래스 추가
         }
       }
