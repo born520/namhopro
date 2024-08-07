@@ -1,10 +1,7 @@
+// script.js
+
 document.addEventListener("DOMContentLoaded", function() {
-  if (!localStorage.getItem('sheetData')) {
-    fetchData();
-  } else {
-    const cachedData = JSON.parse(localStorage.getItem('sheetData'));
-    renderTable(cachedData);
-  }
+  fetchData();
 });
 
 async function fetchData() {
@@ -27,33 +24,50 @@ function renderTable(data) {
     return;
   }
   const table = document.getElementById('data-table');
-  const fragment = document.createDocumentFragment(); // 최적화를 위해 DocumentFragment 사용
+  table.innerHTML = ''; // 초기화
+
+  const mergeMap = {};
+  data.mergedCells.forEach(cell => {
+    mergeMap[`${cell.row}-${cell.column}`] = cell;
+  });
 
   data.tableData.forEach((row, rowIndex) => {
     const tr = document.createElement('tr');
     row.forEach((cellData, colIndex) => {
-      const td = document.createElement('td');
-      td.innerHTML = cellData;
-      applyStyles(td, rowIndex, colIndex, data);
-      tr.appendChild(td);
+      const cellKey = `${rowIndex + 1}-${colIndex + 1}`;
+      const mergeInfo = mergeMap[cellKey];
+      if (!mergeInfo || (mergeInfo.row === rowIndex + 1 && mergeInfo.column === colIndex + 1)) {
+        const td = document.createElement('td');
+        td.innerHTML = cellData;
+        applyStyles(td, rowIndex, colIndex, data);
+
+        if (mergeInfo) {
+          td.rowSpan = mergeInfo.numRows;
+          td.colSpan = mergeInfo.numColumns;
+        }
+        tr.appendChild(td);
+      }
     });
-    fragment.appendChild(tr);
+    table.appendChild(tr);
   });
-  table.innerHTML = '';
-  table.appendChild(fragment); // 한 번에 DOM에 추가
 }
 
 function applyStyles(td, rowIndex, colIndex, data) {
-  // 스타일 적용
   td.style.backgroundColor = data.backgrounds[rowIndex][colIndex] || '';
   td.style.color = data.fontColors[rowIndex][colIndex] || '';
   td.style.textAlign = data.horizontalAlignments[rowIndex][colIndex] || 'left';
   td.style.verticalAlign = data.verticalAlignments[rowIndex][colIndex] || 'top';
   td.style.fontWeight = data.fontWeights[rowIndex][colIndex] || 'normal';
   td.style.fontSize = (data.fontSizes[rowIndex][colIndex] || 12) + 'px';
+
+  if (data.fontStyles[rowIndex][colIndex].includes('strikethrough')) {
+    td.classList.add('strikethrough');
+  }
+
   applyBorderStyles(td);
 }
 
 function applyBorderStyles(td) {
+  // 모든 셀의 테두리를 항상 표시
   td.style.border = '1px solid black';
 }
