@@ -1,5 +1,10 @@
 document.addEventListener("DOMContentLoaded", function() {
-  fetchData();
+  if (!localStorage.getItem('sheetData')) {
+    fetchData();
+  } else {
+    const cachedData = JSON.parse(localStorage.getItem('sheetData'));
+    renderTable(cachedData);
+  }
 });
 
 async function fetchData() {
@@ -22,51 +27,30 @@ function renderTable(data) {
     return;
   }
   const table = document.getElementById('data-table');
-  table.innerHTML = '';
-
-  const mergeMap = {};
-  data.mergedCells.forEach(cell => {
-    for (let i = 0; i < cell.numRows; i++) {
-      for (let j = 0; j < cell.numColumns; j++) {
-        const key = `${cell.row + i}-${cell.column + j}`;
-        mergeMap[key] = { masterRow: cell.row, masterColumn: cell.column };
-      }
-    }
-  });
+  const fragment = document.createDocumentFragment(); // 최적화를 위해 DocumentFragment 사용
 
   data.tableData.forEach((row, rowIndex) => {
     const tr = document.createElement('tr');
     row.forEach((cellData, colIndex) => {
-      const cellKey = `${rowIndex + 1}-${colIndex + 1}`;
-      const mergeInfo = mergeMap[cellKey];
-      if (!mergeInfo || (mergeInfo.masterRow === rowIndex + 1 && mergeInfo.masterColumn === colIndex + 1)) {
-        const td = document.createElement('td');
-        td.innerHTML = cellData;
-        applyStyles(td, rowIndex, colIndex, data);
-
-        if (mergeInfo) {
-          td.rowSpan = data.mergedCells.find(cell => cell.row === mergeInfo.masterRow && cell.column === mergeInfo.masterColumn).numRows;
-          td.colSpan = data.mergedCells.find(cell => cell.row === mergeInfo.masterRow && cell.column === mergeInfo.masterColumn).numColumns;
-        }
-        tr.appendChild(td);
-      }
+      const td = document.createElement('td');
+      td.innerHTML = cellData;
+      applyStyles(td, rowIndex, colIndex, data);
+      tr.appendChild(td);
     });
-    table.appendChild(tr);
+    fragment.appendChild(tr);
   });
+  table.innerHTML = '';
+  table.appendChild(fragment); // 한 번에 DOM에 추가
 }
 
 function applyStyles(td, rowIndex, colIndex, data) {
+  // 스타일 적용
   td.style.backgroundColor = data.backgrounds[rowIndex][colIndex] || '';
   td.style.color = data.fontColors[rowIndex][colIndex] || '';
   td.style.textAlign = data.horizontalAlignments[rowIndex][colIndex] || 'left';
   td.style.verticalAlign = data.verticalAlignments[rowIndex][colIndex] || 'top';
   td.style.fontWeight = data.fontWeights[rowIndex][colIndex] || 'normal';
   td.style.fontSize = (data.fontSizes[rowIndex][colIndex] || 12) + 'px';
-
-  if (data.fontStyles[rowIndex][colIndex].includes('strikethrough')) {
-    td.classList.add('strikethrough');
-  }
-
   applyBorderStyles(td);
 }
 
