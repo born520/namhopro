@@ -1,3 +1,5 @@
+// script.js
+
 document.addEventListener("DOMContentLoaded", function() {
   const cachedData = localStorage.getItem('sheetData');
   if (cachedData) {
@@ -100,16 +102,44 @@ function renderTable(data) {
         td.style.fontWeight = fontWeights[rowIndex][colIndex];
       }
       if (fontStyles[rowIndex] && fontStyles[rowIndex][colIndex]) {
-        td.style.fontStyle = fontStyles[rowIndex][colIndex];
+        if (fontStyles[rowIndex][colIndex].includes('italic')) {
+          td.style.fontStyle = 'italic';
+        }
+        if (fontStyles[rowIndex][colIndex].includes('strikethrough')) {
+          td.classList.add('strikethrough'); // 취소선 클래스 추가
+        }
       }
 
       // 테두리 적용
       const border = borders[rowIndex][colIndex];
       if (border) {
-        if (border.top) td.style.borderTop = '1px solid black';
-        if (border.right) td.style.borderRight = '1px solid black';
-        if (border.bottom) td.style.borderBottom = '1px solid black';
-        if (border.left) td.style.borderLeft = '1px solid black';
+        // 테두리가 존재하는 경우에만 설정
+        if (border.top) {
+          td.style.borderTop = '1px solid black';
+        } else {
+          td.style.borderTop = 'none';
+        }
+        if (border.right) {
+          td.style.borderRight = '1px solid black';
+        } else {
+          td.style.borderRight = 'none';
+        }
+        if (border.bottom) {
+          td.style.borderBottom = '1px solid black';
+        } else {
+          td.style.borderBottom = 'none';
+        }
+        if (border.left) {
+          td.style.borderLeft = '1px solid black';
+        } else {
+          td.style.borderLeft = 'none';
+        }
+      } else {
+        // 테두리 정보가 없으면 기본적으로 모두 제거
+        td.style.borderTop = 'none';
+        td.style.borderRight = 'none';
+        td.style.borderBottom = 'none';
+        td.style.borderLeft = 'none';
       }
 
       // 병합 정보 적용
