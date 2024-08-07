@@ -59,8 +59,16 @@ function applyStyles(td, rowIndex, colIndex, data) {
 }
 
 function applyBorderStyles(td, borders) {
-  td.style.borderTop = borders.top ? '1px solid black' : 'none';
-  td.style.borderRight = borders.right ? '1px solid black' : 'none';
-  td.style.borderBottom = borders.bottom ? '1px solid black' : 'none';
-  td.style.borderLeft = borders.left ? '1px solid black' : 'none';
+  if (borders) {
+    td.style.borderTop = borders.top ? '1px solid black' : 'none';
+    td.style.borderRight = borders.right ? '1px solid black' : 'none';
+    td.style.borderBottom = borders.bottom ? '1px solid black' : 'none';
+    td.style.borderLeft = borders.left ? '1px solid black' : 'none';
+  } else {
+    // 테두리 정보가 없는 경우 모든 테두리를 제거
+    td.style.borderTop = 'none';
+    td.style.borderRight = 'none';
+    td.style.borderBottom = 'none';
+    td.style.borderLeft = 'none';
+  }
 }
