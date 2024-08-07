@@ -1,66 +1,139 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const cachedData = localStorage.getItem('instagramData');
-    if (cachedData) {
-        const data = JSON.parse(cachedData);
-        updateDOM(data.slice(0, 5)); // Initially load only the first 5 entries
-        setupLoadMoreButton(data);
-    } else {
-        fetchData();
+document.addEventListener("DOMContentLoaded", function() {
+  const cachedData = localStorage.getItem('sheetData');
+  if (cachedData) {
+    console.log('Rendering cached data...');
+    try {
+      const parsedData = JSON.parse(cachedData);
+      console.log('Parsed cached data:', parsedData);
+      renderTable(parsedData);
+    } catch (error) {
+      console.error('Error parsing cached data:', error);
     }
+  }
+  fetchData();
 });
 
 async function fetchData() {
-    try {
-        const response = await fetch('https://script.google.com/macros/s/AKfycbyZSWbBG3uW9V1UzjZhwdMG0VDTosfV4sfZcV_dd7hHxUXFIU5IweNTnQ8jbysO6kEPAA/exec'); // Replace this with your actual web app URL
-        const data = await response.json();
-        data.reverse(); // Assuming new links are added to the end and should be shown first
-        localStorage.setItem('instagramData', JSON.stringify(data));
-        updateDOM(data.slice(0, 5)); // Initially load only the first 5 entries
-        setupLoadMoreButton(data);
-    } catch (error) {
-        console.error('Error fetching data:', error);
+  try {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbwKJ6G65T3rM9ZVvkQvWQsr0PaLdczDPtdDT-wopwi18fvI8D6DNIVh2FrqnHXqeTG3/exec');
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
+    const result = await response.json();
+    console.log('Fetched data:', result); // JSON 데이터 구조 확인
+    localStorage.setItem('sheetData', JSON.stringify(result));
+    console.log('Rendering fetched data...');
+    renderTable(result);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
 }
 
-function updateDOM(data) {
-    const contentDiv = document.getElementById('content');
-    data.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'embed-container';
-        div.innerHTML = item.embedCode;
-        contentDiv.appendChild(div);
+function renderTable(data) {
+  if (data.error) {
+    console.error('Error in data:', data.error);
+    return;
+  }
+  const { tableData, backgrounds, fontColors, horizontalAlignments, verticalAlignments, fontWeights, fontStyles, borders, mergedCells } = data;
+  console.log('Data:', tableData);
+  console.log('Backgrounds:', backgrounds);
+  console.log('FontColors:', fontColors);
+  console.log('HorizontalAlignments:', horizontalAlignments);
+  console.log('VerticalAlignments:', verticalAlignments);
+  console.log('FontWeights:', fontWeights);
+  console.log('FontStyles:', fontStyles);
+  console.log('Borders:', borders);
+  console.log('MergedCells:', mergedCells);
+
+  if (!tableData || !backgrounds || !fontColors || !horizontalAlignments || !verticalAlignments || !fontWeights || !fontStyles || !borders || !mergedCells) {
+    console.error('Invalid data structure:', data);
+    return;
+  }
+
+  const table = document.getElementById('data-table');
+  const fragment = document.createDocumentFragment();
+
+  // 병합된 셀 정보를 매핑합니다.
+  const mergeMap = {};
+  mergedCells.forEach(cell => {
+    mergeMap[`${cell.row}-${cell.column}`] = cell;
+  });
+
+  tableData.forEach((row, rowIndex) => {
+    const tr = document.createElement('tr');
+    row.forEach((cell, colIndex) => {
+      const cellKey = `${rowIndex + 1}-${colIndex + 1}`;
+      const td = document.createElement('td');
+      let cellData = tableData[rowIndex][colIndex] || '';
+
+      // 이미지 URL이 포함된 경우, 이미지 컨테이너로 감쌉니다.
+      if (cellData.includes('<img')) {
+        cellData = cellData.replace(
+          /<img/g,
+          '<div class="image-container"><img'
+        ).replace(
+          /<\/img>/g,
+          '</img></div>'
+        );
+      }
+
+      td.innerHTML = cellData.replace(/<a /g, '<a target="_parent" ');
+
+      // 셀 배경색과 글꼴 색상 적용
+      if (backgrounds[rowIndex] && backgrounds[rowIndex][colIndex]) {
+        td.style.backgroundColor = backgrounds[rowIndex][colIndex];
+      }
+      if (fontColors[rowIndex] && fontColors[rowIndex][colIndex]) {
+        td.style.color = fontColors[rowIndex][colIndex];
+      }
+
+      // 셀 정렬 적용
+      if (horizontalAlignments[rowIndex] && horizontalAlignments[rowIndex][colIndex]) {
+        td.style.textAlign = horizontalAlignments[rowIndex][colIndex];
+      }
+      if (verticalAlignments[rowIndex] && verticalAlignments[rowIndex][colIndex]) {
+        td.style.verticalAlign = verticalAlignments[rowIndex][colIndex];
+      }
+
+      // 글자 스타일 적용
+      if (fontWeights[rowIndex] && fontWeights[rowIndex][colIndex]) {
+        td.style.fontWeight = fontWeights[rowIndex][colIndex];
+      }
+      if (fontStyles[rowIndex] && fontStyles[rowIndex][colIndex]) {
+        td.style.fontStyle = fontStyles[rowIndex][colIndex];
+      }
+
+      // 테두리 적용
+      const border = borders[rowIndex][colIndex];
+      if (border) {
+        if (border.top) td.style.borderTop = '1px solid black';
+        if (border.right) td.style.borderRight = '1px solid black';
+        if (border.bottom) td.style.borderBottom = '1px solid black';
+        if (border.left) td.style.borderLeft = '1px solid black';
+      }
+
+      // 병합 정보 적용
+      if (mergeMap[cellKey]) {
+        const mergeInfo = mergeMap[cellKey];
+        td.rowSpan = mergeInfo.numRows;
+        td.colSpan = mergeInfo.numColumns;
+        // 병합된 셀 범위 내의 나머지 셀들을 스킵합니다.
+        for (let r = 0; r < mergeInfo.numRows; r++) {
+          for (let c = 0; c < mergeInfo.numColumns; c++) {
+            if (r !== 0 || c !== 0) {
+              tableData[rowIndex + r][colIndex + c] = null;
+            }
+          }
+        }
+      }
+
+      if (tableData[rowIndex][colIndex] !== null) {
+        tr.appendChild(td);
+      }
     });
-    loadInstagramEmbedScript();
-}
+    fragment.appendChild(tr);
+  });
 
-function loadInstagramEmbedScript() {
-    const existingScript = document.querySelector('script[src="//www.instagram.com/embed.js"]');
-    if (existingScript) {
-        existingScript.remove();
-    }
-    const script = document.createElement('script');
-    script.src = "//www.instagram.com/embed.js";
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-
-    script.onload = function() {
-        if (window.instgrm) {
-            window.instgrm.Embeds.process();
-        }
-    };
-}
-
-function setupLoadMoreButton(data) {
-    const loadMoreButton = document.getElementById('load-more');
-    let currentIndex = 5;
-
-    loadMoreButton.onclick = () => {
-        const nextItems = data.slice(currentIndex, currentIndex + 5);
-        updateDOM(nextItems);
-        currentIndex += 5;
-        if (currentIndex >= data.length) {
-            loadMoreButton.style.display = 'none';
-        }
-    };
+  table.innerHTML = ''; // 테이블 초기화
+  table.appendChild(fragment);
 }
