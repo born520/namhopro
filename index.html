@@ -13,23 +13,23 @@
 </head>
 <body>
   <div id="login">
-    <h2>비밀번호를 입력하세요:</h2>
-    <input type="password" id="password" placeholder="비밀번호">
-    <button onclick="checkPassword()">확인</button>
+    <h2>회사 이메일을 입력하세요:</h2>
+    <input type="email" id="email" placeholder="이메일">
+    <button onclick="checkEmail()">확인</button>
   </div>
   <table id="data-table"></table>
   <script src="script.js"></script>
   <script>
-    function checkPassword() {
-      const passwordInput = document.getElementById('password').value;
-      const correctPassword = '1111'; // 여기서 비밀번호를 설정합니다.
+    function checkEmail() {
+      const emailInput = document.getElementById('email').value;
+      const domain = '@airbusan.com'; // 허용된 이메일 도메인
 
-      if (passwordInput === correctPassword) {
+      if (emailInput.endsWith(domain)) {
         document.getElementById('login').style.display = 'none'; // 로그인 폼 숨기기
         document.getElementById('data-table').style.display = 'table'; // 테이블 표시
-        fetchData(); // 비밀번호가 맞으면 데이터 로드
+        fetchData(); // 도메인이 맞으면 데이터 로드
       } else {
-        alert('비밀번호가 틀렸습니다.');
+        alert('유효한 이메일 주소가 아닙니다.');
       }
     }
   </script>
